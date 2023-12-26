@@ -15,7 +15,7 @@
         "stream": "192.168.1.67:81/stream"
     },
     "iot_device": {
-        "servo": "partial",
+        "servo": "full",
         "temperature": 35,
         "humidity": 50,
         "corrected_rzero": 1,
