@@ -1,0 +1,24 @@
+{   
+    "server": {
+        "main": {
+            "host": "192.168.1.5",
+            "port": 5555,
+            "ml_checkpoint": "./model/ckpt/model.pth"
+        },
+        "image": {
+            "host": "192.168.1.5",
+            "image_port": 5551
+        }
+    },
+    "esp32_cam": {
+        "host": "192.168.1.67",
+        "stream": "192.168.1.67:81/stream"
+    },
+    "iot_device": {
+        "servo": "partial",
+        "temperature": 35,
+        "humidity": 50,
+        "corrected_rzero": 1,
+        "corrected_ppm": 100
+    }
+}

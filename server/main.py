@@ -3,13 +3,8 @@ from datetime import datetime
 import os
 import json
 import torch
-
+import numpy as np
 from PIL import Image
-
-# import mlflow
-# import mlflow.pytorch
-# mlflow.set_tracking_uri("http://localhost:5000")
-# mlflow.set_experiment("fire-detection")
 
 from utils import *
 
@@ -18,6 +13,8 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.models as models
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 data_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -25,8 +22,7 @@ data_transform = transforms.Compose([
                         std=[0.229, 0.224, 0.225])
 ])
 
-server_url = "192.168.1.5:5551"
-
+img_server_url = "192.168.1.5:5551"
 class FireClassifier(nn.Module):
     def __init__(self, num_classes, freeze=True):
         super().__init__()
@@ -43,11 +39,28 @@ class FireClassifier(nn.Module):
         return self.model(x)
 
 model = FireClassifier(num_classes=2, freeze=True)
+model.to(device)
 
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Fire detection API"})
 
+@app.route("/config", methods=["GET", "POST"])
+def config():
+    config = read_file("config.json")
+    if request.method == "POST":
+        if request:
+            data = request.get_json()
+            print(data)
+            append_to_file("config.json", data)
+            return jsonify({"message": "Config updated"})
+        else:
+            return jsonify({"message": "x"})
+    else:
+        if request.user_agent.string.lower() == "esp8266httpclient":
+            print(config["iot_device"])
+            return jsonify(config["iot_device"])
+        return config
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():   
@@ -55,10 +68,7 @@ def upload():
         if request:
             now = datetime.now()
             formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-            # data = request.data.decode('utf-8')
             data = request.get_json()
-            print(type(data))
-            print(data)
             reponse = jsonify({
                 "time" : formatted_time,
                 "data": data
@@ -88,10 +98,12 @@ def fire():
         if request.data.decode('utf-8') == "check":
                 return jsonify({"status": "ok"})
         else:
+            print(request.get_json())
             return jsonify({"status": "huh"})
     else:
         img = Image.open("ok.jpg").convert('RGB')
         img = data_transform(img)
+        img = img.to(device)
 
         result =  model(img.unsqueeze(0))
         result = torch.argmax(result, dim=1)
@@ -99,8 +111,10 @@ def fire():
         print(result.item())
 
         return jsonify({
-            "fire": result.item(), 
-            "url": f"{server_url}/ok.jpg"
+            # "fire": result.item(), 
+            # "fire": 0,
+            "fire": np.random.randint(0, 2), 
+            "url": f"{img_server_url}/ok.jpg"
         })
 
 
