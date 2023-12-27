@@ -51,14 +51,13 @@ def config():
     if request.method == "POST":
         if request:
             data = request.get_json()
-            print(data)
-            append_to_file("config.json", data)
+            config["iot_device"] = data
+            append_to_file("config.json", config)
             return jsonify({"message": "Config updated"})
         else:
-            return jsonify({"message": "x"})
+            return jsonify({"message": "No update"})
     else:
         if request.user_agent.string.lower() == "esp8266httpclient":
-            print(config["iot_device"])
             return jsonify(config["iot_device"])
         return config
 
@@ -94,11 +93,11 @@ def get():
 @app.route("/fire", methods=["GET", "POST"])
 def fire():
     if request.method == "POST":
-        print(request.data)
         if request.data.decode('utf-8') == "check":
-                return jsonify({"status": "ok"})
+            print(request.data)
+            return jsonify({"status": "ok"})
         else:
-            print(request.get_json())
+            print(request.data)
             return jsonify({"status": "huh"})
     else:
         img = Image.open("ok.jpg").convert('RGB')
