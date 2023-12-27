@@ -5,6 +5,7 @@ import json
 import torch
 import numpy as np
 from PIL import Image
+import pandas as pd
 
 from utils import *
 
@@ -92,30 +93,53 @@ def get():
 
 @app.route("/fire", methods=["GET", "POST"])
 def fire():
+    config = read_file("config.json")
     if request.method == "POST":
         if request.data.decode('utf-8') == "check":
             print(request.data)
             return jsonify({"status": "ok"})
         else:
-            print(request.data)
-            return jsonify({"status": "huh"})
+            system_data = request.get_json()
+            print(system_data)
+            img_cfg = config["server"]["image"]
+            camera_url = "http://192.168.1.26:4747/video"
+            img_fn = f"{img_cfg['path']}/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.jpg"
+
+            status = capture_image(
+                camera_url,
+                img_fn
+            )
+            if status == -1:
+                return jsonify({"message": "Error capturing image"})
+            else:
+                img = Image.open(img_fn).convert('RGB')
+                img = data_transform(img)
+                img = img.to(device)
+
+                result =  model(img.unsqueeze(0))
+                result = torch.argmax(result, dim=1)
+
+                print({
+                    "fire": result.item(), 
+                    "url": f"http://{img_server_url}/{img_fn}"
+                })
+                return jsonify({
+                    "fire": result.item(), 
+                    "url": f"http://{img_server_url}/{img_fn}"
+                })
     else:
-        img = Image.open("ok.jpg").convert('RGB')
-        img = data_transform(img)
-        img = img.to(device)
+        return jsonify({"message": "Fire detection"})
 
-        result =  model(img.unsqueeze(0))
-        result = torch.argmax(result, dim=1)
-
-        print(result.item())
-
-        return jsonify({
-            # "fire": result.item(), 
-            # "fire": 0,
-            "fire": np.random.randint(0, 2), 
-            "url": f"{img_server_url}/ok.jpg"
-        })
-
+@app.route("/capture", methods=["GET"])
+def capture():
+    config = read_file("config.json")
+    sensor_data = read_file("data.json")
+    img_cfg = config["server"]["image"]
+    status = capture_image("http://192.168.1.26:4747/video", f"{img_cfg['path']}/hehe.jpg")
+    if status == -1:
+        return jsonify({"message": "Error"})
+    else:
+        return jsonify({"message": "Image captured"})
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5555)
