@@ -1,46 +1,14 @@
 from flask import Flask, jsonify, request
-from datetime import datetime
 import os
 import json
-import torch
-import numpy as np
-from PIL import Image
-import pandas as pd
-
 from utils import *
 
 app = Flask(__name__)
-import torch.nn as nn
-import torchvision.transforms as transforms
-import torchvision.models as models
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-data_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-                        std=[0.229, 0.224, 0.225])
-])
-
-img_server_url = "192.168.1.5:5551"
-class FireClassifier(nn.Module):
-    def __init__(self, num_classes, freeze=True):
-        super().__init__()
-        # self.model = models.efficientnet_b0()
-        self.model = models.resnet18()
-
-        if freeze:
-            for param in self.model.parameters():
-                param.require_grad = False
-        
-        self.model.fc = nn.Linear(512, num_classes)
-
-    def forward(self, x):
-        return self.model(x)
-
+config = read_file("config.json")
 model = FireClassifier(num_classes=2, freeze=True)
-model.to(device)
+img_cfg = config["server"]["image"]
+img_server_url = f'{config["server"]["host"]}:{img_cfg["port"]}'
+camera_url = config["esp32_cam"]["stream"]
 
 @app.route("/", methods=["GET"])
 def home():
@@ -62,7 +30,7 @@ def config():
             return jsonify(config["iot_device"])
         return config
 
-@app.route("/upload", methods=["GET", "POST"])
+@app.route("/system", methods=["GET", "POST"])
 def upload():   
     if request.method == "POST":
         if request:
@@ -74,72 +42,39 @@ def upload():
                 "data": data
             })
             append_to_file("data.json", reponse.json)
+            log_data(data, "./log/system.csv")
             return jsonify({"message": "Upload ok"})
         else:
             return jsonify({"message": "Nothing uploaded"})
-    else:
-        return jsonify({"message": "Upload sensor data"})
-
-@app.route("/get", methods=["GET"])
-def get():
     if request.method == "GET":
-        if request:
-            data = read_file("data.json")
-            return jsonify(data)
-        else:
-            return jsonify({"message": "No data found"})
-    else:
-        return jsonify({"message": "Get sensor data"})
+        data = read_file("data.json")
+        return jsonify(data)
 
 @app.route("/fire", methods=["GET", "POST"])
 def fire():
-    config = read_file("config.json")
     if request.method == "POST":
         if request.data.decode('utf-8') == "check":
             print(request.data)
             return jsonify({"status": "ok"})
         else:
             system_data = request.get_json()
-            print(system_data)
-            img_cfg = config["server"]["image"]
-            camera_url = "http://192.168.1.26:4747/video"
             img_fn = f"{img_cfg['path']}/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.jpg"
+            img_url = f"http://{img_server_url}/{img_fn.replace('../', '')}"
+            status = capture_image(f"http://{camera_url}", img_fn)
+            result = model.predict(img_fn)
 
-            status = capture_image(
-                camera_url,
-                img_fn
-            )
+            log_data(system_data, "./log/fire.csv", result, img_url)
+
             if status == -1:
                 return jsonify({"message": "Error capturing image"})
             else:
-                img = Image.open(img_fn).convert('RGB')
-                img = data_transform(img)
-                img = img.to(device)
-
-                result =  model(img.unsqueeze(0))
-                result = torch.argmax(result, dim=1)
-
-                print({
-                    "fire": result.item(), 
-                    "url": f"http://{img_server_url}/{img_fn}"
-                })
                 return jsonify({
-                    "fire": result.item(), 
-                    "url": f"http://{img_server_url}/{img_fn}"
+                    "fire": result, 
+                    "url": img_url
                 })
     else:
-        return jsonify({"message": "Fire detection"})
-
-@app.route("/capture", methods=["GET"])
-def capture():
-    config = read_file("config.json")
-    sensor_data = read_file("data.json")
-    img_cfg = config["server"]["image"]
-    status = capture_image("http://192.168.1.26:4747/video", f"{img_cfg['path']}/hehe.jpg")
-    if status == -1:
-        return jsonify({"message": "Error"})
-    else:
-        return jsonify({"message": "Image captured"})
+        result = get_fire_report("./log/fire.csv")
+        return result
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5555)

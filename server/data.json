@@ -1,1 +1,1 @@
-{"data": {"DHT": {"humidity": 71, "temperature": 30}, "IR": 1, "MQ-135": {"correctedPPM": 56545.26, "correctedRZero": 13.0, "ppm": 77214.05, "resistance": 7.34, "rzero": 11.61}}, "time": "2023-12-28-00-36-56"}
+{"data": {"DHT": {"humidity": 72, "temperature": 29}, "IR": 1, "MQ-135": {"correctedPPM": 27309.74, "correctedRZero": 16.84, "ppm": 37534.11, "resistance": 9.52, "rzero": 15.07}}, "time": "2023-12-29-01-48-10"}

@@ -1,1 +1,25 @@
-{"server": {"main": {"host": "192.168.1.5", "port": 5555, "ml_checkpoint": "./model/ckpt/model.pth"}, "image": {"host": "192.168.1.5", "port": 5551, "path": "../images"}}, "esp32_cam": {"host": "192.168.1.67", "stream": "192.168.1.67:81/stream"}, "iot_device": {"corrected_ppm": 100000000, "corrected_rzero": 0, "humidity": 0, "servo": 0, "temperature": 100}}
+{
+    "server": {
+        "host": "192.168.1.5",
+        "main": {
+            "port": 5555,
+            "ml_checkpoint": "./model/model.pth"
+        },
+        "image": {
+            "port": 5551,
+            "path": "../images"
+        }
+    },
+    "esp32_cam": {
+        "host": "192.168.1.67",
+        "stream": "192.168.1.67:81/stream"
+    },
+    "iot_device": {
+        "corrected_ppm": 100000000,
+        "corrected_rzero": 0,
+        "humidity": 0,
+        "servo_neck": 0,
+        "servo_base": 90,
+        "temperature": 100
+    }
+}
