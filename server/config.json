@@ -1,14 +1,9 @@
 {
     "server": {
         "host": "192.168.1.5",
-        "main": {
-            "port": 5555,
-            "ml_checkpoint": "./model/model.pth"
-        },
-        "image": {
-            "port": 5551,
-            "path": "../images"
-        }
+        "port": 5555,
+        "model": "./model/",
+        "image_dir": "./log/images"
     },
     "esp32_cam": {
         "host": "192.168.1.67",

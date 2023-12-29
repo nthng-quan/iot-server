@@ -1,0 +1,17 @@
+services:
+  iot_server:
+    build:
+      context: .
+      dockerfile: main.Dockerfile
+    restart: unless-stopped
+    container_name: document-type
+    volumes:
+      - ./log/:/app/log
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    

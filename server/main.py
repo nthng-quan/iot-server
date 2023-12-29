@@ -1,34 +1,44 @@
-from flask import Flask, jsonify, request
 import os
 import json
 from utils import *
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    send_from_directory
+)
 
 app = Flask(__name__)
-config = read_file("config.json")
-model = FireClassifier(num_classes=2, freeze=True)
-img_cfg = config["server"]["image"]
-img_server_url = f'{config["server"]["host"]}:{img_cfg["port"]}'
-camera_url = config["esp32_cam"]["stream"]
+cfg = read_file("config.json")
+server_cfg = cfg["server"]
+server_url = f'{server_cfg["host"]}:{server_cfg["port"]}'
+camera_url = cfg["esp32_cam"]["stream"]
+
+model = Model(model_path=server_cfg['model'], reload=True)
 
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "Fire detection API"})
 
+@app.route("/health", methods=["GET"])
+def healthcheck():
+    return jsonify({"message": "ok"})
+
 @app.route("/config", methods=["GET", "POST"])
 def config():
-    config = read_file("config.json")
+    cfg = read_file("config.json")
     if request.method == "POST":
         if request:
             data = request.get_json()
-            config["iot_device"] = data
-            append_to_file("config.json", config)
+            cfg["iot_device"] = data
+            append_to_file("config.json", cfg)
             return jsonify({"message": "Config updated"})
         else:
             return jsonify({"message": "No update"})
     else:
         if request.user_agent.string.lower() == "esp8266httpclient":
-            return jsonify(config["iot_device"])
-        return config
+            return jsonify(cfg["iot_device"])
+        return cfg
 
 @app.route("/system", methods=["GET", "POST"])
 def upload():   
@@ -58,15 +68,17 @@ def fire():
             return jsonify({"status": "ok"})
         else:
             system_data = request.get_json()
-            img_fn = f"{img_cfg['path']}/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.jpg"
-            img_url = f"http://{img_server_url}/{img_fn.replace('../', '')}"
+            img_fn = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg"
+            img_dir = f"{server_cfg['image_dir']}/{img_fn}"
+            img_url = f"http://{server_url}/image/{img_fn}"
+
             status = capture_image(f"http://{camera_url}", img_fn)
             result = model.predict(img_fn)
 
             log_data(system_data, "./log/fire.csv", result, img_url)
 
             if status == -1:
-                return jsonify({"message": "Error capturing image"})
+                return jsonify({"error": "Error capturing image"})
             else:
                 return jsonify({
                     "fire": result, 
@@ -75,6 +87,15 @@ def fire():
     else:
         result = get_fire_report("./log/fire.csv")
         return result
+
+@app.route("/image/<path:filename>", methods=["GET"])
+def get_image(filename):
+    img_path = os.path.join(server_cfg['image_dir'], filename)
+    if not os.path.isfile(img_path):
+        return jsonify({"error": f"Image {img_path} not found"})
+    else:
+        return send_from_directory(
+            server_cfg['image_dir'], filename, as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5555)

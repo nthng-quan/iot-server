@@ -1,6 +1,13 @@
 # iot-server
 Fire detection server
 
+# Setup
+```bash
+git clone https://github.com/nthng-quan/iot-server.git
+cd server/
+docker compose up
+```
+
 # /system
 GET:
 ```json
