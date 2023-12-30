@@ -11,37 +11,38 @@ from flask import (
 app = Flask(__name__)
 cfg = read_file("config.json")
 server_cfg = cfg["server"]
-server_url = f'{server_cfg["host"]}:{server_cfg["port"]}'
-camera_url = cfg["esp32_cam"]["stream"]
+server_url = f"http://{server_cfg['host']}:{server_cfg['port']}"
+camera_url = f"http://{cfg['esp32_cam']['host']}"
 
-model = Model(model_path=server_cfg['model'], reload=True)
+# model = Model(model_path=server_cfg['model'], reload=True)
+model = Model(model_path=server_cfg['model'], reload=False)
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "Fire detection API"})
+    return jsonify({"service": "Fire detection system API"})
 
-@app.route("/health", methods=["GET"])
-def healthcheck():
+@app.route("/status", methods=["GET"])
+def status():
     return jsonify({"message": "ok"})
 
 @app.route("/config", methods=["GET", "POST"])
-def config():
-    cfg = read_file("config.json")
+def config_route():
+    config = read_file("config.json")
     if request.method == "POST":
         if request:
             data = request.get_json()
-            cfg["iot_device"] = data
-            append_to_file("config.json", cfg)
+            config["iot_device"] = data
+            update_file("config.json", config)
             return jsonify({"message": "Config updated"})
         else:
             return jsonify({"message": "No update"})
     else:
         if request.user_agent.string.lower() == "esp8266httpclient":
-            return jsonify(cfg["iot_device"])
-        return cfg
+            return jsonify(config["iot_device"])
+        return config
 
 @app.route("/system", methods=["GET", "POST"])
-def upload():   
+def system():   
     if request.method == "POST":
         if request:
             now = datetime.now()
@@ -51,11 +52,12 @@ def upload():
                 "time" : formatted_time,
                 "data": data
             })
-            append_to_file("data.json", reponse.json)
+            update_file("data.json", reponse.json)
             log_data(data, "./log/system.csv")
             return jsonify({"message": "Upload ok"})
         else:
             return jsonify({"message": "Nothing uploaded"})
+
     if request.method == "GET":
         data = read_file("data.json")
         return jsonify(data)
@@ -64,16 +66,12 @@ def upload():
 def fire():
     if request.method == "POST":
         if request.data.decode('utf-8') == "check":
-            print(request.data)
+            print("* Init check fire")
             return jsonify({"status": "ok"})
         else:
             system_data = request.get_json()
-            img_fn = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg"
-            img_dir = f"{server_cfg['image_dir']}/{img_fn}"
-            img_url = f"http://{server_url}/image/{img_fn}"
-
-            status = capture_image(f"http://{camera_url}", img_fn)
-            result = model.predict(img_fn)
+            img_dir, img_url = capture_image()
+            result = model.predict(img_dir)
 
             log_data(system_data, "./log/fire.csv", result, img_url)
 
@@ -81,7 +79,8 @@ def fire():
                 return jsonify({"error": "Error capturing image"})
             else:
                 return jsonify({
-                    "fire": result, 
+                    # "fire": result, 
+                    "fire": np.random.randint(0, 2),
                     "url": img_url
                 })
     else:
@@ -96,6 +95,15 @@ def get_image(filename):
     else:
         return send_from_directory(
             server_cfg['image_dir'], filename, as_attachment=True)
+
+@app.route("/capture", methods=["GET"])
+def capture():
+    img_dir, img_url = capture_image()
+
+    if img_dir == -1:
+        return jsonify({"error": "Error capturing image"})
+    else:
+        return jsonify({"img_url": img_url})
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5555)

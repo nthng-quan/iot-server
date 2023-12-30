@@ -3,19 +3,18 @@ import cv2
 import os 
 import pandas as pd
 from datetime import datetime
+import requests
 
-def append_to_file(filename, data):
-    file_path = filename
+def update_file(file_path, data):
+    with open(file_path, 'w') as filename:
+        json.dump(data, filename, sort_keys=True, indent=4)
 
-    with open(file_path, 'w') as file:
-        file.write(json.dumps(data))
 
-def read_file(filename):
-    file_path = filename
-
+def read_file(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
         return data
+
 
 def log_data(system_data, log_fn, result="", img_url=""):
     df_ir = pd.DataFrame([system_data.get('IR', {})], columns=['IR'])
@@ -26,31 +25,40 @@ def log_data(system_data, log_fn, result="", img_url=""):
     result_df = pd.DataFrame([datetime.now().strftime('%Y-%m-%d-%H-%M-%S')], columns=['time'])
     result_df = pd.concat([result_df, df_ir, df_mq135, df_dht, df_servo], axis=1)
 
-    if img_url and result:
+    if img_url != None and result != None:
         result_df["result"] = result
         result_df["img_url"] = img_url
+
 
     if not os.path.isfile(log_fn):
         result_df.to_csv(log_fn, header=True, index=False)
     else:
         result_df.to_csv(log_fn, mode='a', header=False, index=False)
 
-def capture_image(video_url, save_path):
-    cap = cv2.VideoCapture(video_url)
-    if not cap.isOpened():
-        print("Error: Could not open video stream.")
-        return -1
-    ret, frame = cap.read()
 
-    if not ret:
-        print("Error: Could not read frame from the video stream.")
-        return -1
-        
-    cv2.imwrite(save_path, frame)
-    cap.release()
+def capture_image():
+    config = read_file("config.json")
+    server_url = f'http://{config["server"]["host"]}:{config["server"]["port"]}'
+    camera_url = f'http://{config["esp32_cam"]["host"]}/capture'
+    
+    img_fn = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg"
+    img_dir = f"{config['server']['image_dir']}/{img_fn}"
+    img_url = f"{server_url}/image/{img_fn}"
 
-    print(f"Image captured and saved to {save_path}")
-    return 0
+    try:
+        response = requests.get(camera_url)
+        response.raise_for_status()
+
+        with open(img_dir, "wb") as file:
+            file.write(response.content)
+
+        print(f"-> Image captured and saved to {img_dir}.")
+        return img_dir, img_url
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+        return -1, None
+
 
 def get_fire_report(log_fn):
     df = pd.read_csv(log_fn)
@@ -59,7 +67,7 @@ def get_fire_report(log_fn):
     lastest_fire = df[df['result'] == 1].tail(1)
 
     return {
-        "_fire": fire,
-        "_no_fire": no_fire,
+        "n_fire": fire,
+        "n_no_fire": no_fire,
         "lastest_fire": lastest_fire.to_dict(orient='records')
     }
