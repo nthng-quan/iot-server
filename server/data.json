@@ -5,13 +5,13 @@
             "temperature": 30
         },
         "IR": 1,
-        "MQ-135": {
-            "correctedPPM": 16514.53,
-            "correctedRZero": 20.19,
-            "ppm": 22797.61,
-            "resistance": 11.45,
-            "rzero": 18.04
+        "MQ_135": {
+            "correctedPPM": 15302.69,
+            "correctedRZero": 20.92,
+            "ppm": 20896.23,
+            "resistance": 11.77,
+            "rzero": 18.62
         }
     },
-    "time": "2023-12-31-02-50-17"
+    "time": "2023-12-31-03-32-32"
 }

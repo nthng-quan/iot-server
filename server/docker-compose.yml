@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: main.Dockerfile
     restart: unless-stopped
-    container_name: document-type
+    container_name: iot_server
     volumes:
       - ./log/:/app/log
     ports:

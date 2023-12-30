@@ -8,7 +8,7 @@
         "corrected_rzero": 0,
         "humidity": 0,
         "servo_base": 90,
-        "servo_neck": 0,
+        "servo_neck": 90,
         "temperature": 100
     },
     "node_red": {

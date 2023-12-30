@@ -18,7 +18,7 @@ def read_file(file_path):
 
 def log_data(system_data, log_fn, result="", img_url=""):
     df_ir = pd.DataFrame([system_data.get('IR', {})], columns=['IR'])
-    df_mq135 = pd.DataFrame([system_data.get('MQ-135', {})])
+    df_mq135 = pd.DataFrame([system_data.get('MQ_135', {})])
     df_dht = pd.DataFrame([system_data.get('DHT', {})])
     df_servo = pd.DataFrame([system_data.get('servo', {})])
 

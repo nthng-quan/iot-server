@@ -77,7 +77,8 @@ def fire():
         else:
             system_data = request.get_json()
             img_dir, img_url = capture_image()
-            result = model.predict(img_dir)
+            # result = model.predict(img_dir)
+            result = np.random.randint(0, 2)
 
             log_data(system_data, "./log/fire.csv", result, img_url)
 
@@ -85,8 +86,7 @@ def fire():
                 return jsonify({"error": "Error capturing image"})
             else:
                 return jsonify({
-                    # "fire": result, 
-                    "fire": np.random.randint(0, 2),
+                    "fire": result,
                     "url": img_url
                 })
     else:
