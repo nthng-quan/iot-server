@@ -12,18 +12,22 @@ app = Flask(__name__)
 cfg = read_file("config.json")
 server_cfg = cfg["server"]
 server_url = f"http://{server_cfg['host']}:{server_cfg['port']}"
+node_red_url = f"http://{cfg['node_red']['host']}:{cfg['node_red']['port']}"
 camera_url = f"http://{cfg['esp32_cam']['host']}"
 
 # model = Model(model_path=server_cfg['model'], reload=True)
 model = Model(model_path=server_cfg['model'], reload=False)
 
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"service": "Fire detection system API"})
 
+
 @app.route("/status", methods=["GET"])
 def status():
     return jsonify({"message": "ok"})
+
 
 @app.route("/config", methods=["GET", "POST"])
 def config_route():
@@ -40,6 +44,7 @@ def config_route():
         if request.user_agent.string.lower() == "esp8266httpclient":
             return jsonify(config["iot_device"])
         return config
+
 
 @app.route("/system", methods=["GET", "POST"])
 def system():   
@@ -61,6 +66,7 @@ def system():
     if request.method == "GET":
         data = read_file("data.json")
         return jsonify(data)
+
 
 @app.route("/fire", methods=["GET", "POST"])
 def fire():
@@ -87,6 +93,7 @@ def fire():
         result = get_fire_report("./log/fire.csv")
         return result
 
+
 @app.route("/image/<path:filename>", methods=["GET"])
 def get_image(filename):
     img_path = os.path.join(server_cfg['image_dir'], filename)
@@ -95,10 +102,14 @@ def get_image(filename):
     else:
         return send_from_directory(
             server_cfg['image_dir'], filename, as_attachment=True)
+            
 
 @app.route("/capture", methods=["GET"])
 def capture():
     img_dir, img_url = capture_image()
+    if request.user_agent.string.lower() == "esp8266httpclient":
+        requests.post(f"{node_red_url}/capture", json={"img_url": img_url})
+        return jsonify({"success": "Forwarded to node-red"})    
 
     if img_dir == -1:
         return jsonify({"error": "Error capturing image"})

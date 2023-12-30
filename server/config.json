@@ -8,8 +8,12 @@
         "corrected_rzero": 0,
         "humidity": 0,
         "servo_base": 90,
-        "servo_neck": -180,
+        "servo_neck": 0,
         "temperature": 100
+    },
+    "node_red": {
+        "host": "192.168.1.5",
+        "port": 1880
     },
     "server": {
         "host": "192.168.1.5",
