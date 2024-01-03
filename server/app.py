@@ -5,7 +5,9 @@ from flask import (
     Flask,
     jsonify,
     request,
-    send_from_directory
+    send_from_directory,
+    redirect,
+    url_for
 )
 
 app = Flask(__name__)
@@ -76,8 +78,10 @@ def fire():
             return jsonify({"status": "ok"})
         else:
             system_data = request.get_json()
-            img_dir, img_url = capture_image()
+            # img_dir, img_url = capture_image()
             # result = model.predict(img_dir)
+            img_url = "img_url"
+            img_dir = "img_dir"
             result = np.random.randint(0, 2)
 
             log_data(system_data, "./log/fire.csv", result, img_url)
@@ -86,7 +90,7 @@ def fire():
                 return jsonify({"error": "Error capturing image"})
             else:
                 return jsonify({
-                    "fire": result,
+                    "fire": np.random.randint(0, 2),
                     "url": img_url
                 })
     else:
@@ -106,7 +110,9 @@ def get_image(filename):
 
 @app.route("/capture", methods=["GET"])
 def capture():
-    img_dir, img_url = capture_image()
+    # img_dir, img_url = capture_image()
+    img_dir = "img_dir"
+    img_url = "img_url"
     if request.user_agent.string.lower() == "esp8266httpclient":
         requests.post(f"{node_red_url}/capture", json={"img_url": img_url})
         return jsonify({"success": "Forwarded to node-red"})    
@@ -115,6 +121,26 @@ def capture():
         return jsonify({"error": "Error capturing image"})
     else:
         return jsonify({"img_url": img_url})
+
+@app.route("/config/camera", methods=["GET", "POST"])
+def camera_config():
+    if request.method == "POST":
+        if request:
+            data = request.get_json()
+            result = set_camera_parameters(data)
+
+            if result == 1:
+                update_camera_cfg() # get /status -> update config.json
+                return jsonify({"message": "Config updated"})
+            else:
+                return jsonify({"message": result})
+
+        else:
+            return jsonify({"message": "No update"})
+
+    else:
+        return redirect(url_for("config_route"))
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5555)

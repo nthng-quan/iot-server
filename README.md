@@ -129,15 +129,22 @@ GET:
 ```json
 {
     "esp32_cam": {
+        "detail": {
+            "0x111": 0,
+            "0x132": 137,
+            "0xd3": 8,
+            "...": "...",
+            "xclk": 20
+        },
         "host": "192.168.1.67",
         "stream": "192.168.1.244:81/stream"
     },
     "iot_device": {
-        "corrected_ppm": 900000000,
+        "corrected_ppm": 100000000,
         "corrected_rzero": 0,
         "humidity": 0,
         "servo_base": 90,
-        "servo_neck": 90,
+        "servo_neck": 0,
         "temperature": 100
     },
     "node_red": {
@@ -164,6 +171,20 @@ sample payload
     "temperature": 100
 }
 ``````
+
+# /config/camera
+GET: redirect to /config
+
+POST:
+```json
+{
+    "framesize": 1, 
+    "quality": 1,
+    "gainceling": 1,
+    "led_intensity": 1
+}
+```
+
 # /capture
 Arduino <-- GET / resp --> server ~ server -- POST --> node-red             
 

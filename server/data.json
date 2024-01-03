@@ -1,17 +1,17 @@
 {
     "data": {
         "DHT": {
-            "humidity": 71,
+            "humidity": 68,
             "temperature": 30
         },
         "IR": 1,
         "MQ_135": {
-            "correctedPPM": 15302.69,
-            "correctedRZero": 20.92,
-            "ppm": 20896.23,
-            "resistance": 11.77,
-            "rzero": 18.62
+            "correctedPPM": 46679.6,
+            "correctedRZero": 13.93,
+            "ppm": 63307.58,
+            "resistance": 7.88,
+            "rzero": 12.48
         }
     },
-    "time": "2023-12-31-03-32-32"
+    "time": "2024-01-03-22-55-39"
 }

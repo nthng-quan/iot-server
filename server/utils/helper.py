@@ -1,5 +1,4 @@
 import json
-import cv2
 import os 
 import pandas as pd
 from datetime import datetime
@@ -36,30 +35,6 @@ def log_data(system_data, log_fn, result="", img_url=""):
         result_df.to_csv(log_fn, mode='a', header=False, index=False)
 
 
-def capture_image():
-    config = read_file("config.json")
-    server_url = f'http://{config["server"]["host"]}:{config["server"]["port"]}'
-    camera_url = f'http://{config["esp32_cam"]["host"]}/capture'
-    
-    img_fn = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg"
-    img_dir = f"{config['server']['image_dir']}/{img_fn}"
-    img_url = f"{server_url}/image/{img_fn}"
-
-    try:
-        response = requests.get(camera_url)
-        response.raise_for_status()
-
-        with open(img_dir, "wb") as file:
-            file.write(response.content)
-
-        print(f"-> Image captured and saved to {img_dir}.")
-        return img_dir, img_url
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
-        return -1, None
-
-
 def get_fire_report(log_fn):
     df = pd.read_csv(log_fn)
     fire = len(df[df['result'] == 1])
@@ -71,3 +46,5 @@ def get_fire_report(log_fn):
         "n_no_fire": no_fire,
         "lastest_fire": lastest_fire.to_dict(orient='records')
     }
+
+    
