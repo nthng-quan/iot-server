@@ -14,4 +14,4 @@ VOLUME /app/log
 
 EXPOSE 5555
 
-CMD [ "python3", "main.py"]
+CMD [ "python3", "app.py"]
