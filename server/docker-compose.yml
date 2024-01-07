@@ -1,10 +1,10 @@
 services:
-  iot_server:
+  iot_server_ms:
     build:
       context: .
       dockerfile: main.Dockerfile
     restart: unless-stopped
-    container_name: iot_server
+    container_name: iot_server_ms
     volumes:
       - ./log/:/app/log
     ports:
