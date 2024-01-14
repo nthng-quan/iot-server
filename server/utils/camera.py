@@ -10,8 +10,14 @@ def capture_image():
     camera_url = f'http://{config["esp32_cam"]["host"]}/capture'
     
     img_fn = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg"
-    img_dir = f"{config['server']['image_dir']}/{img_fn}"
-    img_url = f"{server_url}/image/{img_fn}"
+    # img_dir = f"{config['server']['image_dir']}/{img_fn}"
+    # img_url = f"{server_url}/image/{img_fn}"
+    img_dir = f"{config['server']['image_dir']}/test.jpg"
+    img_url = f"{server_url}/image/test.jpg"
+
+    # led on at 18 -> 6
+    if datetime.now().hour < 6 or datetime.now().hour > 17:
+        set_camera_parameters({"led_intensity": 30})
 
     try:
         response = requests.get(camera_url)

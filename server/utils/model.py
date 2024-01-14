@@ -7,6 +7,8 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.models as models
 
+mlflow.set_tracking_uri("http://nthng-quan.ddns.net:5000")
+mlflow.set_experiment("fire-detection")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 data_transform = transforms.Compose([
@@ -19,6 +21,7 @@ data_transform = transforms.Compose([
 class Model(object):
     def __init__(self, num_classes=2, model_path="./model", reload=True):
         if reload:
+            print(f"-> Reloading model from {model_path}...")
             self.model = ReloadModel(model_path)
         else:
             self.model = Resnet18(num_classes, freeze=True)

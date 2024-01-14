@@ -1,4 +1,4 @@
-FROM python:3.8.18-slim as builder
+FROM python:3.10-slim as builder
 
 WORKDIR /app
 
@@ -11,20 +11,22 @@ RUN apt-get update \
 
 COPY requirements.txt requirements.txt
 RUN pip install --upgrade pip \
-    && pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+    && pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
-FROM python:3.8.18-slim as release
+FROM python:3.10-slim as release
 
 WORKDIR /app
 
 COPY . .
 
-COPY --from=builder /usr/local/lib/python3.8/site-packages/ /usr/local/lib/python3.8/site-packages/
+COPY --from=builder /usr/local/lib/python3.10/site-packages/ /usr/local/lib/python3.10/site-packages/
+COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin
+
 COPY --from=builder /app .
 
 VOLUME /app/log
 
 EXPOSE 5555
 
-CMD ["python3", "app.py"]
+CMD gunicorn --bind 0.0.0.0:5555 app:app

@@ -28,7 +28,6 @@ def log_data(system_data, log_fn, result="", img_url=""):
         result_df["result"] = result
         result_df["img_url"] = img_url
 
-
     if not os.path.isfile(log_fn):
         result_df.to_csv(log_fn, header=True, index=False)
     else:

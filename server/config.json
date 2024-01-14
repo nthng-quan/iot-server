@@ -33,7 +33,7 @@
             "wpc": 1,
             "xclk": 20
         },
-        "host": "192.168.1.67",
+        "host": "192.168.1.244",
         "stream": "192.168.1.244:81/stream"
     },
     "iot_device": {
@@ -51,7 +51,7 @@
     "server": {
         "host": "192.168.1.5",
         "image_dir": "./log/images",
-        "model": "./model/",
+        "model": "runs:/7b887e9d359a4a849a8b5c9a0010a3a9/model",
         "port": 5555
     }
 }

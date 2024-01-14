@@ -11,15 +11,18 @@ from flask import (
 )
 
 app = Flask(__name__)
+
 cfg = read_file("config.json")
 server_cfg = cfg["server"]
-server_url = f"http://{server_cfg['host']}:{server_cfg['port']}"
+server_url = f"http://{server_cfg['host']}:{server_cfg['port']}"    
 node_red_url = f"http://{cfg['node_red']['host']}:{cfg['node_red']['port']}"
 camera_url = f"http://{cfg['esp32_cam']['host']}"
 
-# model = Model(model_path=server_cfg['model'], reload=True)
-model = Model(model_path=server_cfg['model'], reload=False)
-
+try:
+    model = Model(model_path=server_cfg['model'], reload=True)
+except:
+    model_path = './model/2'
+    model = Model(model_path=model_path, reload=True)
 
 @app.route("/", methods=["GET"])
 def home():
@@ -49,7 +52,7 @@ def config_route():
 
 
 @app.route("/system", methods=["GET", "POST"])
-def system():   
+def system():
     if request.method == "POST":
         if request:
             now = datetime.now()
@@ -78,11 +81,11 @@ def fire():
             return jsonify({"status": "ok"})
         else:
             system_data = request.get_json()
-            # img_dir, img_url = capture_image()
-            # result = model.predict(img_dir)
-            img_url = "img_url"
-            img_dir = "img_dir"
-            result = np.random.randint(0, 2)
+            img_dir, img_url = capture_image()
+            result = model.predict('./log/images/test.jpg')
+            # img_url = "img_url"
+            # img_dir = "img_dir"
+            # result = np.random.randint(0, 2)
 
             log_data(system_data, "./log/fire.csv", result, img_url)
 
@@ -90,7 +93,7 @@ def fire():
                 return jsonify({"error": "Error capturing image"})
             else:
                 return jsonify({
-                    "fire": np.random.randint(0, 2),
+                    "fire": result,
                     "url": img_url
                 })
     else:
@@ -106,7 +109,7 @@ def get_image(filename):
     else:
         return send_from_directory(
             server_cfg['image_dir'], filename, as_attachment=True)
-            
+
 
 @app.route("/capture", methods=["GET"])
 def capture():
@@ -115,12 +118,13 @@ def capture():
     img_url = "img_url"
     if request.user_agent.string.lower() == "esp8266httpclient":
         requests.post(f"{node_red_url}/capture", json={"img_url": img_url})
-        return jsonify({"success": "Forwarded to node-red"})    
+        return jsonify({"success": "Forwarded to node-red"})
 
     if img_dir == -1:
         return jsonify({"error": "Error capturing image"})
     else:
         return jsonify({"img_url": img_url})
+
 
 @app.route("/config/camera", methods=["GET", "POST"])
 def camera_config():
