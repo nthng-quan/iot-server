@@ -7,7 +7,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.models as models
 
-mlflow.set_tracking_uri("http://nthng-quan.ddns.net:5000")
+mlflow.set_tracking_uri("http://linux:5000")
 mlflow.set_experiment("fire-detection")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

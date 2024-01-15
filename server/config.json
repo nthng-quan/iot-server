@@ -2,8 +2,8 @@
     "esp32_cam": {
         "detail": {
             "0x111": 0,
-            "0x132": 137,
-            "0xd3": 8,
+            "0x132": 54,
+            "0xd3": 12,
             "ae_level": 0,
             "aec": 1,
             "aec2": 0,
@@ -13,28 +13,28 @@
             "awb": 1,
             "awb_gain": 1,
             "bpc": 0,
-            "brightness": 1,
+            "brightness": 0,
             "colorbar": 0,
             "contrast": 0,
             "dcw": 1,
             "face_detect": 0,
-            "framesize": 2,
-            "gainceiling": 6,
+            "framesize": 11,
+            "gainceiling": 0,
             "hmirror": 0,
-            "led_intensity": 97,
+            "led_intensity": 0,
             "lenc": 1,
             "pixformat": 4,
-            "quality": 5,
+            "quality": 10,
             "raw_gma": 1,
             "saturation": 0,
             "sharpness": 0,
             "special_effect": 0,
-            "wb_mode": 3,
+            "wb_mode": 0,
             "wpc": 1,
             "xclk": 20
         },
-        "host": "192.168.1.244",
-        "stream": "192.168.1.244:81/stream"
+        "host": "192.168.1.245",
+        "stream": "192.168.1.245:81/stream"
     },
     "iot_device": {
         "corrected_ppm": 100000000,
@@ -45,13 +45,13 @@
         "temperature": 100
     },
     "node_red": {
-        "host": "192.168.1.5",
+        "host": "localhost",
         "port": 1880
     },
     "server": {
-        "host": "192.168.1.5",
+        "host": "localhost",
         "image_dir": "./log/images",
-        "model": "runs:/7b887e9d359a4a849a8b5c9a0010a3a9/model",
+        "model": "runs:/7681a6ee844047d5bc813b08d2367d4a/model",
         "port": 5555
     }
 }

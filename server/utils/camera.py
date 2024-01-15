@@ -10,10 +10,10 @@ def capture_image():
     camera_url = f'http://{config["esp32_cam"]["host"]}/capture'
     
     img_fn = f"{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.jpg"
-    # img_dir = f"{config['server']['image_dir']}/{img_fn}"
-    # img_url = f"{server_url}/image/{img_fn}"
-    img_dir = f"{config['server']['image_dir']}/test.jpg"
-    img_url = f"{server_url}/image/test.jpg"
+    img_dir = f"{config['server']['image_dir']}/{img_fn}"
+    img_url = f"{server_url}/image/{img_fn}"
+    # img_dir = f"{config['server']['image_dir']}/test.jpg"
+    # img_url = f"{server_url}/image/test.jpg"
 
     # led on at 18 -> 6
     if datetime.now().hour < 6 or datetime.now().hour > 17:
@@ -28,10 +28,15 @@ def capture_image():
 
         print(f"-> Image captured and saved to {img_dir}.")
         return img_dir, img_url
+    
+    except: # test
+        img_dir = './log/images/test.jpg'
+        img_url = f"{server_url}/image/test.jpg"
+        return img_dir, img_url
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
-        return -1, None
+    # except requests.exceptions.RequestException as e:
+    #     print(f"Error: {e}")
+    #     return -1, None
 
 def update_camera_cfg():
     config = read_file("config.json")

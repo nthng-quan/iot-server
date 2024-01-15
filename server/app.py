@@ -63,6 +63,7 @@ def system():
                 "data": data
             })
             update_file("data.json", reponse.json)
+            print(data)
             log_data(data, "./log/system.csv")
             return jsonify({"message": "Upload ok"})
         else:
@@ -82,11 +83,8 @@ def fire():
         else:
             system_data = request.get_json()
             img_dir, img_url = capture_image()
-            result = model.predict('./log/images/test.jpg')
-            # img_url = "img_url"
-            # img_dir = "img_dir"
-            # result = np.random.randint(0, 2)
-
+            # result = model.predict('./log/images/test.jpg')
+            result = model.predict(img_dir)
             log_data(system_data, "./log/fire.csv", result, img_url)
 
             if status == -1:
@@ -113,9 +111,9 @@ def get_image(filename):
 
 @app.route("/capture", methods=["GET"])
 def capture():
-    # img_dir, img_url = capture_image()
-    img_dir = "img_dir"
-    img_url = "img_url"
+    img_dir, img_url = capture_image()
+    # img_dir = "img_dir"
+    # img_url = "img_url"
     if request.user_agent.string.lower() == "esp8266httpclient":
         requests.post(f"{node_red_url}/capture", json={"img_url": img_url})
         return jsonify({"success": "Forwarded to node-red"})
