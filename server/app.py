@@ -18,11 +18,7 @@ server_url = f"http://{server_cfg['host']}:{server_cfg['port']}"
 node_red_url = f"http://{cfg['node_red']['host']}:{cfg['node_red']['port']}"
 camera_url = f"http://{cfg['esp32_cam']['host']}"
 
-try:
-    model = Model(model_path=server_cfg['model'], reload=True)
-except:
-    model_path = './model/2'
-    model = Model(model_path=model_path, reload=True)
+model = Model(model_path=server_cfg['model'], model_name='yolo')
 
 @app.route("/", methods=["GET"])
 def home():
@@ -63,7 +59,6 @@ def system():
                 "data": data
             })
             update_file("data.json", reponse.json)
-            print(data)
             log_data(data, "./log/system.csv")
             return jsonify({"message": "Upload ok"})
         else:
@@ -83,8 +78,12 @@ def fire():
         else:
             system_data = request.get_json()
             img_dir, img_url = capture_image()
-            # result = model.predict('./log/images/test.jpg')
             result = model.predict(img_dir)
+            
+            if len(result) > 1: # yolo bboxes
+                img_url = result[1]
+                result = result[0]
+
             log_data(system_data, "./log/fire.csv", result, img_url)
 
             if status == -1:
@@ -101,19 +100,22 @@ def fire():
 
 @app.route("/image/<path:filename>", methods=["GET"])
 def get_image(filename):
-    img_path = os.path.join(server_cfg['image_dir'], filename)
-    if not os.path.isfile(img_path):
-        return jsonify({"error": f"Image {img_path} not found"})
-    else:
-        return send_from_directory(
-            server_cfg['image_dir'], filename, as_attachment=True)
+    img_path_plain = os.path.join(f"{server_cfg['image_dir']}/plain", filename)
+    img_path_yolo = os.path.join(f"{server_cfg['image_dir']}/yolo_output", filename)
 
+    if not os.path.isfile(img_path_plain) and not os.path.isfile(img_path_yolo):
+        return jsonify({"error": f"Image {filename} not found"})
+    else:
+        try:
+            return send_from_directory(\
+                f"{server_cfg['image_dir']}/plain", filename, as_attachment=True)
+        except:
+            return send_from_directory(\
+                f"{server_cfg['image_dir']}/yolo_output", filename, as_attachment=True)
 
 @app.route("/capture", methods=["GET"])
 def capture():
     img_dir, img_url = capture_image()
-    # img_dir = "img_dir"
-    # img_url = "img_url"
     if request.user_agent.string.lower() == "esp8266httpclient":
         requests.post(f"{node_red_url}/capture", json={"img_url": img_url})
         return jsonify({"success": "Forwarded to node-red"})

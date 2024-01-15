@@ -2,8 +2,8 @@
     "esp32_cam": {
         "detail": {
             "0x111": 0,
-            "0x132": 54,
-            "0xd3": 12,
+            "0x132": 9,
+            "0xd3": 8,
             "ae_level": 0,
             "aec": 1,
             "aec2": 0,
@@ -18,10 +18,10 @@
             "contrast": 0,
             "dcw": 1,
             "face_detect": 0,
-            "framesize": 11,
-            "gainceiling": 0,
+            "framesize": 8,
+            "gainceiling": 26,
             "hmirror": 0,
-            "led_intensity": 0,
+            "led_intensity": 90,
             "lenc": 1,
             "pixformat": 4,
             "quality": 10,
@@ -33,8 +33,8 @@
             "wpc": 1,
             "xclk": 20
         },
-        "host": "192.168.1.245",
-        "stream": "192.168.1.245:81/stream"
+        "host": "192.168.1.244",
+        "stream": "192.168.1.244:81/stream"
     },
     "iot_device": {
         "corrected_ppm": 100000000,
@@ -45,13 +45,13 @@
         "temperature": 100
     },
     "node_red": {
-        "host": "localhost",
+        "host": "192.168.1.77",
         "port": 1880
     },
     "server": {
-        "host": "localhost",
+        "host": "iot-server.ddns.net",
         "image_dir": "./log/images",
-        "model": "runs:/7681a6ee844047d5bc813b08d2367d4a/model",
+        "model": "./model/yolo/fire_detection.pt",
         "port": 5555
     }
 }

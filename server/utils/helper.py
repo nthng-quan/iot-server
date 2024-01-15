@@ -24,7 +24,7 @@ def log_data(system_data, log_fn, result="", img_url=""):
     result_df = pd.DataFrame([datetime.now().strftime('%Y-%m-%d-%H-%M-%S')], columns=['time'])
     result_df = pd.concat([result_df, df_ir, df_mq135, df_dht, df_servo], axis=1)
 
-    if img_url != None and result != None:
+    if img_url != "" or result != "":
         result_df["result"] = result
         result_df["img_url"] = img_url
 
