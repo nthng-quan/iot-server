@@ -2,7 +2,7 @@ services:
   iot_server_ms:
     build:
       context: .
-      dockerfile: main.Dockerfile
+      dockerfile: Dockerfile
     restart: unless-stopped
     container_name: iot_server_ms
     volumes:
