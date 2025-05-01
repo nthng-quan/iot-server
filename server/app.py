@@ -1,5 +1,5 @@
 import os
-
+from typing import Any, Dict
 import utils
 from flask import (
     Flask,
@@ -13,6 +13,8 @@ from flask.wrappers import Response
 
 from datetime import datetime
 import requests
+
+from utils.model import ModelResponse
 
 app = Flask(__name__)
 
@@ -69,7 +71,7 @@ def post_system_data():
     response_data = {"time": formatted_time, "data": data}
 
     utils.update_file("data.json", response_data)
-    utils.log_data(data, "./log/system.csv")
+    utils.log_data(log_filename="./log/system.csv", system_data=data)
 
     return jsonify({"message": "Upload ok"})
 
@@ -87,24 +89,20 @@ def check_or_detect_fire():
         return jsonify({"status": "ok"})
 
     # Handle actual fire detection
-    system_data = request.get_json()
-    img_dir, img_url = utils.capture_image()
+    system_data: Dict[str, Any] = request.get_json()
+    img_info: Dict[str, str] = utils.capture_image()
 
-    if img_dir == -1:
+    if img_info.get("img_dir", "") == "":
         return jsonify({"error": "Error capturing image"}), 500
 
-    result = model.predict(img_dir)
-
-    if len(result) > 1:
-        img_url = result[1]
-        result = result[0]
-
-    utils.log_data(system_data, "./log/fire.csv", result, img_url)
-
-    final_response = {"fire": result, "url": img_url}
-    return jsonify(final_response)
+    result: ModelResponse = model.predict(img_info)
+    utils.log_data(
+        log_filename="./log/fire.csv", system_data=system_data, model_response=result
+    )
+    return jsonify(result)
 
 
+# TODO: separate service
 @app.route("/image/<path:filename>", methods=["GET"])
 def get_image(filename):
     base_img_dir = server_cfg["image_dir"]

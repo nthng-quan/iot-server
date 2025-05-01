@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import Dict
 
 import requests
 
 from .helper import read_file, update_file
 
 
-def capture_image():
+def capture_image() -> Dict[str, str]:
     config = read_file("config.json")
     server_url = f"http://{config['server']['host']}:{config['server']['port']}"
     camera_url = f"http://{config['esp32_cam']['host']}/capture"
@@ -28,7 +29,7 @@ def capture_image():
             file.write(response.content)
 
         print(f"-> Image captured and saved to {img_dir}.")
-        return img_dir, img_url
+        return {"img_dir": img_dir, "img_url": img_url}
 
     # except:  # test
     #     img_dir = "./log/images/plain/test.jpg"
@@ -37,7 +38,7 @@ def capture_image():
 
     except requests.exceptions.RequestException as e:
         print(f"Error: {e}")
-        return -1, None
+        return {"img_dir": "", "img_url": ""}
 
 
 def update_camera_cfg():
@@ -69,4 +70,3 @@ def set_camera_parameters(parameters):
         return 0
 
     return 1
-

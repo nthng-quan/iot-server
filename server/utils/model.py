@@ -7,8 +7,7 @@ from PIL import Image, ImageDraw
 from ultralytics import YOLO
 
 from .helper import read_file
-from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, TypedDict, Dict
 
 mlflow.set_tracking_uri("http://linux:5000")
 mlflow.set_experiment("fire-detection")
@@ -29,10 +28,9 @@ node_red_url = f"http://{cfg['node_red']['host']}:{cfg['node_red']['port']}"
 camera_url = f"http://{cfg['esp32_cam']['host']}"
 
 
-@dataclass
-class ModelResponse:
-    is_fire: int
-    img_url: Optional[str]
+class ModelResponse(TypedDict):
+    fire: bool  # is fire (0, 1)
+    url: Optional[str]  # image url
 
 
 class Model(object):
@@ -49,9 +47,11 @@ class Model(object):
         elif model_name == "yolo":
             self.model = YoloV8(model_path)
 
-    def predict(self, img_fn) -> ModelResponse:
-        print(img_fn)
-        return self.model.predict(img_fn)
+    def predict(self, img_info: Dict[str, str]) -> ModelResponse:
+        img_fn = img_info.get("img_fn", "")
+        img_url = img_info.get("img_url", "")
+
+        return self.model.predict(img_fn, img_url)
 
 
 class ReloadModel(nn.Module):
@@ -63,17 +63,14 @@ class ReloadModel(nn.Module):
         )
         self.model.eval()
 
-    def predict(self, img_fn) -> ModelResponse:
+    def predict(self, img_fn: str, img_url: str) -> ModelResponse:
         with torch.inference_mode():
             img = Image.open(img_fn).convert("RGB")
             img = data_transform(img).to(device)
             result = self.model(img.unsqueeze(0))
 
         result = torch.argmax(result, dim=1).item()
-        return ModelResponse(
-            is_fire=int(result > 0.5),
-            img_url="",
-        )
+        return ModelResponse(fire=result > 0.5, url=img_url)
 
 
 class Resnet18(nn.Module):
@@ -87,17 +84,14 @@ class Resnet18(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-    def predict(self, img_fn) -> ModelResponse:
+    def predict(self, img_fn: str, img_url: str) -> ModelResponse:
         with torch.inference_mode():
             img = Image.open(img_fn).convert("RGB")
             img = data_transform(img).to(device)
             result = self.model(img.unsqueeze(0))
 
         result = torch.argmax(result, dim=1).item()
-        return ModelResponse(
-            is_fire=int(result > 0.5),
-            img_url="",
-        )
+        return ModelResponse(fire=result > 0.5, url=img_url)
 
 
 class YoloV8:
@@ -105,7 +99,7 @@ class YoloV8:
         super().__init__()
         self.model = YOLO(model_path)
 
-    def predict(self, img_fn) -> ModelResponse:
+    def predict(self, img_fn: str, img_url: str) -> ModelResponse:
         results = self.model.predict(img_fn)
         image = Image.open(img_fn)
         draw = ImageDraw.Draw(image)  # plot boxes
@@ -123,6 +117,6 @@ class YoloV8:
         image.save(output_path)
 
         return ModelResponse(
-            is_fire=int(len(results[0].boxes.cls) > 0),
+            fire=len(results[0].boxes.cls) > 0,
             url=img_url,
         )

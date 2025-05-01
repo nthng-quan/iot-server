@@ -4,7 +4,6 @@ mlflow==2.9.2
 cffi==1.16.0
 cloudpickle==3.0.0
 defusedxml==0.7.1
-# gmpy2==2.1.2
 numpy==1.26.3
 packaging==23.2
 pandas==2.1.4
@@ -14,5 +13,3 @@ tqdm==4.66.1
 gunicorn==21.2.0
 ultralytics
 opencv-python
-# torch==2.1.2
-# torchvision==0.16.2
