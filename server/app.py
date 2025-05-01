@@ -1,10 +1,18 @@
 import os
 
 import utils
-from flask import Flask, jsonify, request, send_from_directory, redirect, url_for
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    send_from_directory,
+    redirect,
+    url_for,
+)
+from flask.wrappers import Response
+
 from datetime import datetime
 import requests
-from flask.wrappers import Response
 
 app = Flask(__name__)
 
@@ -93,7 +101,8 @@ def check_or_detect_fire():
 
     utils.log_data(system_data, "./log/fire.csv", result, img_url)
 
-    return jsonify({"fire": result, "url": img_url})
+    final_response = {"fire": result, "url": img_url}
+    return jsonify(final_response)
 
 
 @app.route("/image/<path:filename>", methods=["GET"])
@@ -122,9 +131,11 @@ def capture():
         return jsonify({"success": "Forwarded to node-red"})
 
     if img_dir == -1:
-        return jsonify({"error": "Error capturing image"})
+        final_response = {"error": "Error capturing image"}
+        return jsonify(final_response)
     else:
-        return jsonify({"img_url": img_url})
+        final_response = {"img_url": img_url}
+        return jsonify(final_response)
 
 
 @app.route("/config/camera", methods=["GET"])
@@ -136,15 +147,18 @@ def get_camera_config():
 def update_camera_config():
     data = request.get_json()
     if not data:
-        return jsonify({"message": "No update"}), 400
+        result = {"message": "No update"}
+        return jsonify(result), 400
 
     result = utils.set_camera_parameters(data)
 
     if result == 1:
         utils.update_camera_cfg()  # sync config.json
-        return jsonify({"message": "Config updated"})
+        final_response = {"message": "Config updated"}
+        return jsonify(final_response)
     else:
-        return jsonify({"message": result})
+        final_response = {"message": result}
+        return jsonify(final_response)
 
 
 if __name__ == "__main__":
