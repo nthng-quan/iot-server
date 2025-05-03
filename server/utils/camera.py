@@ -50,7 +50,7 @@ def update_camera_cfg():
     update_file("config.json", config)
 
 
-def set_camera_parameters(parameters):
+def set_camera_parameters(parameters) -> str:
     # framesize, quality, gainceling, led_intensity
     config = read_file("config.json")
     base_url = f"http://{config['esp32_cam']['host']}/control"
@@ -66,7 +66,6 @@ def set_camera_parameters(parameters):
                 return f"Failed to set {variable} to {value}"
 
     except Exception as e:
-        print(f"Error: {e}")
-        return 0
+        return f"Error: {e}"
 
-    return 1
+    return "Success"
